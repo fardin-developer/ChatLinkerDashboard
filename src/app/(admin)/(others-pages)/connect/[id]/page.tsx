@@ -49,6 +49,8 @@ export default function InstanceDetailsPage() {
           setLoading(false);
           return;
         }
+        console.log(id);
+        
         
         const response = await axios.get(`http://localhost:3000/api/v1/instance/${id}`, {
           headers: {
@@ -75,7 +77,7 @@ export default function InstanceDetailsPage() {
       const token = localStorage.getItem('authToken');
       
       // This would be your actual API endpoint to get QR code
-      const response = await axios.post(`http://localhost:3000/api/v1/instance/${id}/connect`, {}, {
+      const response = await axios.post(`http://localhost:3000/api/v1/qr`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }

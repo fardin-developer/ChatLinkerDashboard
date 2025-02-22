@@ -16,6 +16,7 @@ export default function InstancesDashboard() {
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null)
 
   const router = useRouter();
 
@@ -29,6 +30,9 @@ export default function InstancesDashboard() {
           setLoading(false);
           return;
         }
+
+        setToken(token);
+
         
         const response = await axios.get('http://localhost:3000/api/v1/instance/all', {
           headers: {
@@ -75,10 +79,52 @@ export default function InstancesDashboard() {
     console.log('Current instances state:', instances);
   }, [instances]);
 
-  const handleCreateInstance = () => {
-    // Navigate to create instance page or open modal
+  const handleCreateInstance = async () => {
     console.log('Create instance clicked');
+  
+    // Retrieve the latest token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    
+    if (!token) {
+      console.error('Authentication token not found');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+        body: JSON.stringify({}), 
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Instance created successfully:', data);
+  
+        // Ensure correct data structure before updating state
+        const newInstance = {
+          id: data.instance._id,  
+          name: data.instance.key || 'New Instance',
+          status: 'Active', 
+          authorized: false, 
+          type: 'DEFAULT', 
+        };
+  
+        // Update the instances state with the new instance
+        setInstances((prevInstances) => [...prevInstances, newInstance]);
+      } else {
+        console.error('Error creating instance:', data);
+      }
+    } catch (error) {
+      console.error('Request failed:', error);
+    }
   };
+  
+  
 
   if (loading) {
     return (
@@ -133,7 +179,7 @@ export default function InstancesDashboard() {
     <div className="p-6 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.length > 0 ? instances.map((instance) => (
-          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3002/connect/${instance._id}`)}>
+          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/connect/${instance._id}`)}>
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center">
