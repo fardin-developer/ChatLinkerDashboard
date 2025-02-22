@@ -35,8 +35,8 @@ const navItems: NavItem[] = [
   },
   {
     icon: <GridIcon />,
-    name: "Connect",
-    path: "/connect",
+    name: "Instances",
+    path: "/instance",
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   // {
