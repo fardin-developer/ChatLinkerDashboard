@@ -179,7 +179,7 @@ export default function InstancesDashboard() {
     <div className="p-6 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.length > 0 ? instances.map((instance) => (
-          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/connect/${instance._id}`)}>
+          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/instance/${instance._id}`)}>
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center">
