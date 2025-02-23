@@ -16,7 +16,7 @@ export default function InstancesDashboard() {
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null)
+  // const [token, setToken] = useState<string | null>(null)
 
   const router = useRouter();
 
@@ -31,7 +31,7 @@ export default function InstancesDashboard() {
           return;
         }
 
-        setToken(token);
+        // setToken(token);
 
         
         const response = await axios.get('http://localhost:3000/api/v1/instance/all', {
@@ -107,7 +107,7 @@ export default function InstancesDashboard() {
   
         // Ensure correct data structure before updating state
         const newInstance = {
-          id: data.instance._id,  
+          id: data.instance.id,  
           name: data.instance.key || 'New Instance',
           status: 'Active', 
           authorized: false, 
@@ -179,7 +179,7 @@ export default function InstancesDashboard() {
     <div className="p-6 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.length > 0 ? instances.map((instance) => (
-          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/instance/${instance._id}`)}>
+          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/instance/${instance.id}`)}>
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center">

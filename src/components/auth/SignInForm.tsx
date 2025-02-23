@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -8,19 +8,26 @@ import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 
+interface FormData {
+  email: string;
+  password: string;
+  name: string;
+}
+
 export default function SignInForm() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
-  const [formData, setFormData] = useState({
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isChecked, setIsChecked] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
-    name: "User" // Adding default name value as it's in your API example
+    name: "User", // Default name as per API example
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleInputChange = (e) => {
+  // Handle input change
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -28,7 +35,8 @@ export default function SignInForm() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  // Handle form submission
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -39,47 +47,36 @@ export default function SignInForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name
-        }),
+        body: JSON.stringify(formData),
       });
 
       // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        // Handle non-JSON response
         const textResponse = await response.text();
         console.error("Non-JSON response:", textResponse);
-        throw new Error("Server returned an invalid response format. Please try again later.");
+        throw new Error("Server returned an invalid response format. Please try again.");
       }
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Login failed");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // Mock successful login if API doesn't return token for testing purposes
+      // Mock successful login if API doesn't return a token
       const token = data.token || "mock-token-for-testing";
-      
-      // Save token to localStorage
+
+      // Save token
       localStorage.setItem("authToken", token);
-      
-      // If "Keep me logged in" is checked, save user data
+
+      // Save user data if "Keep me logged in" is checked
       if (isChecked) {
-        const userData = data.user || { email: formData.email, name: formData.name };
-        localStorage.setItem("userData", JSON.stringify(userData));
+        localStorage.setItem("userData", JSON.stringify(data.user || formData));
       }
-      
-      // Redirect to dashboard
+
       console.log("Login successful, redirecting to dashboard...");
       router.push("/");
-      
+
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.message || "Something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -115,23 +112,26 @@ export default function SignInForm() {
 
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
+                {/* Email Field */}
                 <div>
                   <Label htmlFor="email">
-                    Email <span className="text-error-500">*</span>{" "}
+                    Email <span className="text-error-500">*</span>
                   </Label>
-                  <Input 
+                  <Input
                     id="email"
                     name="email"
-                    placeholder="info@gmail.com" 
+                    placeholder="info@gmail.com"
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
+
+                {/* Password Field */}
                 <div>
                   <Label htmlFor="password">
-                    Password <span className="text-error-500">*</span>{" "}
+                    Password <span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -144,7 +144,7 @@ export default function SignInForm() {
                       required
                     />
                     <span
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                     >
                       {showPassword ? (
@@ -155,14 +155,16 @@ export default function SignInForm() {
                     </span>
                   </div>
                 </div>
+
+                {/* Keep Me Logged In */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Checkbox 
+                    <Checkbox
                       id="remember-me"
-                      checked={isChecked} 
-                      onChange={setIsChecked} 
+                      checked={isChecked}
+                      onChange={() => setIsChecked((prev) => !prev)}
                     />
-                    <label 
+                    <label
                       htmlFor="remember-me"
                       className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400 cursor-pointer"
                     >
@@ -176,22 +178,20 @@ export default function SignInForm() {
                     Forgot password?
                   </Link>
                 </div>
+
+                {/* Submit Button */}
                 <div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="sm"
-                    disabled={loading}
-                  >
+                  <Button type="submit" className="w-full" size="sm" disabled={loading}>
                     {loading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>
             </form>
 
+            {/* Sign Up Link */}
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Don&apos;t have an account? {""}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/signup"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"

@@ -5,7 +5,7 @@ import MonthlyTarget from "@/components/Report/MonthlyTarget";
 import MonthlySalesChart from "@/components/Report/MonthlySalesChart";
 import StatisticsChart from "@/components/Report/StatisticsChart";
 import RecentOrders from "@/components/Report/RecentOrders";
-import DemographicCard from "@/components/Report/DemographicCard";
+// import DemographicCard from "@/components/Report/DemographicCard";
 
 export const metadata: Metadata = {
   title:

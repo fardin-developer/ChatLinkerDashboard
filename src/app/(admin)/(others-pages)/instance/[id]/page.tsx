@@ -280,7 +280,7 @@ export default function InstanceDetailsPage() {
                       <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
-                      <p className="text-gray-400">Click "Connect WhatsApp" to begin</p>
+                      <p className="text-gray-400">Click &quot Connect WhatsApp &quot to begin</p>
                     </div>
                   </div>
                 )}
