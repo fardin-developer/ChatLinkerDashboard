@@ -182,7 +182,7 @@ export default function InstancesDashboard() {
     <div className="p-6 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.length > 0 ? instances.map((instance) => (
-          <div key={instance._id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`/instance/${instance.key}`)}>
+          <div key={instance._id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg cursor-pointer" onClick={() => router.push(`/instance/${instance.key}`)}>
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center">
@@ -197,19 +197,12 @@ export default function InstancesDashboard() {
               </div>
               
               <div className="mt-4 flex justify-between items-center">
-                <span className={`px-2 py-1 text-xs rounded-full ${instance.authorized ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
-                  {instance.authorized ? 'Authorized' : 'Not Authorized'}
-                </span>
-                <span className="text-green-400 uppercase text-sm font-medium">{instance.type || 'DEVELOPER'}</span>
               </div>
               
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-gray-400 text-sm">The instance works with restrictions</p>
                 <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center">
                   Upgrade
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
                 </button>
               </div>
             </div>

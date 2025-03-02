@@ -4,7 +4,8 @@ import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
-import React from "react";
+import createApiClient from "@/utis/axiosClient";
+import React, { useEffect } from "react";
 
 export default function AdminLayout({
   children,
@@ -13,7 +14,24 @@ export default function AdminLayout({
 }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
-  // Dynamic class for main content margin based on sidebar state
+  const token = localStorage.getItem("authToken");
+  if (!token) window.location.href = "/signin";
+  
+  const fetchLoggedInUser = async () => {
+    const apiClient = await createApiClient();
+    const response = await apiClient.get(`/api/v1/user/me`);
+    localStorage.setItem(
+      "userData", 
+      JSON.stringify({
+        name: response.data.name,
+        email: response.data.email
+      }));
+  };
+
+  useEffect(() => {
+    fetchLoggedInUser();
+  }, []);
+
   const mainContentMargin = isMobileOpen
     ? "ml-0"
     : isExpanded || isHovered

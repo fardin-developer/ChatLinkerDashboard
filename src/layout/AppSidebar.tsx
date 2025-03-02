@@ -5,16 +5,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  // BoxCubeIcon,
-  // CalenderIcon,
   ChevronDownIcon,
+  TaskIcon,
   GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  // PageIcon,
-  // PieChartIcon,
   PlugInIcon,
-  TableIcon,
   UserCircleIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
@@ -31,10 +25,9 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Home",
     path: "/",
-    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
-    icon: <GridIcon />,
+    icon: <TaskIcon />,
     name: "Instances",
     path: "/instance",
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
@@ -49,17 +42,26 @@ const navItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
+  {
+    icon: <PlugInIcon />,
+    name: "api-docs",
+    path: "/api-docs",
+    // subItems: [
+    //   { name: "Sign In", path: "/signin", pro: false },
+    //   { name: "Sign Up", path: "/signup", pro: false },
+    // ],
+  },
 
-  {
-    name: "Settings",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Payments",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
+  // {
+  //   name: "Settings",
+  //   icon: <ListIcon />,
+  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  // },
+  // {
+  //   name: "Payments",
+  //   icon: <TableIcon />,
+  //   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+  // },
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
@@ -91,23 +93,23 @@ const othersItems: NavItem[] = [
   //     { name: "Videos", path: "/videos", pro: false },
   //   ],
   // },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "api-docs",
-    path: "/api-docs",
-    // subItems: [
-    //   { name: "Sign In", path: "/signin", pro: false },
-    //   { name: "Sign Up", path: "/signup", pro: false },
-    // ],
-  },
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Sign Up", path: "/signup", pro: false },
+  //   ],
+  // },
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "api-docs",
+  //   path: "/api-docs",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Sign Up", path: "/signup", pro: false },
+  //   ],
+  // },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -135,7 +137,7 @@ const AppSidebar: React.FC = () => {
               }`}
             >
               <span
-                className={` ${
+                className={` cursor-pointer ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -144,7 +146,7 @@ const AppSidebar: React.FC = () => {
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className={`menu-item-text`}>{nav.name}</span>
+                <span className={`menu-item-text cursor-pointer`}>{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
@@ -161,12 +163,12 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${
+                className={`menu-item group cursor-pointer ${
                   isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                 }`}
               >
                 <span
-                  className={`${
+                  className={` cursor-pointer ${
                     isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
@@ -175,7 +177,7 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className={`menu-item-text`}>{nav.name}</span>
+                  <span className={`menu-item-text cursor-pointer`}>{nav.name}</span>
                 )}
               </Link>
             )
@@ -365,16 +367,16 @@ const AppSidebar: React.FC = () => {
                     : "justify-start"
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? (
+                {/* {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
                   <HorizontaLDots />
-                )}
+                )} */}
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
 
-            <div className="">
+            {/* <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
                   !isExpanded && !isHovered
@@ -389,7 +391,7 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}
-            </div>
+            </div> */}
           </div>
         </nav>
         {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}

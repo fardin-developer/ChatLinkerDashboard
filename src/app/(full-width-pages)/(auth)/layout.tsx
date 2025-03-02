@@ -31,7 +31,7 @@ export default function AuthLayout({
                   <span className="text-white">ChatLinker</span>
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">
-                  Free and Open-Source Tailwind CSS Admin Dashboard Template
+                  Affordable and secure WhatsApp API
                 </p>
               </div>
             </div>

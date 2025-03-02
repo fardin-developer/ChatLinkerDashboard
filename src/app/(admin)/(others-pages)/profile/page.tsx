@@ -1,16 +1,31 @@
+"use client";
+
 import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import UserMetaCard from "@/components/user-profile/UserMetaCard";
+import { User } from "@/types/user";
+import createApiClient from "@/utis/axiosClient";
 import { Metadata } from "next";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-export const metadata: Metadata = {
-  title: "Next.js Profile | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Profile page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-};
 
 export default function Profile() {
+  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserDetails = async () => {
+    setLoading(true);
+    const apiClient = await createApiClient();
+    const response = await apiClient.get(`/api/v1/user/me`);
+    setUserProfile(response.data);
+    setLoading(false);
+    
+  };
+
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
+
   return (
     <div>
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
@@ -18,9 +33,16 @@ export default function Profile() {
           Profile
         </h3>
         <div className="space-y-6">
-          <UserMetaCard />
-          <UserInfoCard />
-          <UserAddressCard />
+
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          </div>
+        ) : (
+          userProfile && <UserInfoCard user={userProfile} />
+        )}
+          {/* <UserMetaCard /> */}
+          {/* <UserAddressCard /> */}
         </div>
       </div>
     </div>
