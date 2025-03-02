@@ -1,26 +1,18 @@
 'use client'
-// pages/instances/[id].tsx
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-interface InstanceDetails {
-  id: string;
+
+
+interface Instance {
+  _id: string;
+  key: string;
+  connected: boolean;
+  createdAt: string;
   name?: string;
-  status: string;
-  authorized: boolean;
-  type: string;
-  createdAt?: string;
-  updatedAt?: string;
   phoneNumber?: string;
-  deviceDetails?: {
-    platform?: string;
-    deviceManufacturer?: string;
-    deviceModel?: string;
-    osVersion?: string;
-    batteryLevel?: number;
-    isConnected?: boolean;
-  };
   stats?: {
     messagesReceived?: number;
     messagesSent?: number;
@@ -29,99 +21,156 @@ interface InstanceDetails {
   };
 }
 
+interface QRCodeResponse {
+  success: boolean;
+  data: {
+    sessionId: string;
+    qrCodeUrl: string;
+  }
+}
+
+
+type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'expired';
+
 export default function InstanceDetailsPage() {
   const router = useRouter();
   const { id } = useParams();
-  const [instance, setInstance] = useState<InstanceDetails | null>(null);
+  const [instance, setInstance] = useState<Instance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [disconnecting, setDisconnecting] = useState(false);
+  
+  const connectionCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const qrExpireTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getAuthToken = useCallback(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+    return token;
+  }, []);
+
+  const createApiClient = useCallback(() => {
+    const token = getAuthToken();
+    return axios.create({
+      baseURL: `${BASE_URL}/api/v1`,
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }, [getAuthToken]);
+
+  const fetchInstanceDetails = useCallback(async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      const apiClient = createApiClient();
+      const response = await apiClient.get(`/instance/${id}`);
+      
+      if (response.data && response.data.instance) {
+        setInstance(response.data.instance);
+        setConnectionStatus(response.data.instance.connected ? 'connected' : 'disconnected');
+      } else {
+        throw new Error('Invalid instance data received');
+      }
+    } catch (err) {
+      console.error('Error fetching instance details:', err);
+      setError('Failed to fetch instance details');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, createApiClient]);
+
+  const cleanupIntervals = useCallback(() => {
+    if (connectionCheckIntervalRef.current) {
+      clearInterval(connectionCheckIntervalRef.current);
+      connectionCheckIntervalRef.current = null;
+    }
+    
+    if (qrExpireTimeoutRef.current) {
+      clearTimeout(qrExpireTimeoutRef.current);
+      qrExpireTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (!id) return;
-
-    const fetchInstanceDetails = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          setError('Authentication token not found');
-          setLoading(false);
-          return;
-        }
-        console.log(id);
-        
-        
-        const response = await axios.get(`${BASE_URL}/api/v1/instance/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        setInstance(response.data);
-        setConnectionStatus(response.data.deviceDetails?.isConnected ? 'connected' : 'disconnected');
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch instance details');
-        setLoading(false);
-        console.error('Error fetching instance details:', err);
-      }
-    };
-
     fetchInstanceDetails();
-  }, [id]);
+    
+    return () => {
+      cleanupIntervals();
+    };
+  }, [fetchInstanceDetails, cleanupIntervals]);
 
   const handleConnectWhatsapp = async () => {
     try {
-      setConnectionStatus('connecting');
-      const token = localStorage.getItem('authToken');
+      cleanupIntervals();
       
-      // This would be your actual API endpoint to get QR code
-      const response = await axios.post(`${BASE_URL}/api/v1/qr`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      setConnectionStatus('connecting');
+      const apiClient = createApiClient();
+      
+      const response = await apiClient.post<QRCodeResponse>('/qr/get_qr_code', {
+        instance_key: id
       });
       
-      // Assuming the API returns a QR code string
-      setQrCode(response.data.qrCode);
-      
-      // In a real implementation, you would listen for connection events
-      // Here we'll simulate that with a timeout
-      const checkConnectionInterval = setInterval(async () => {
-        try {
-          const statusResponse = await axios.get(`${BASE_URL}/api/v1/instance/${id}/status`, {
-            headers: {
-              Authorization: `Bearer ${token}`
+      if (response.data.success && response.data.data.qrCodeUrl) {
+        setQrCode(response.data.data.qrCodeUrl);
+        
+        connectionCheckIntervalRef.current = setInterval(async () => {
+          try {
+            const statusResponse = await apiClient.get(`/instance/${id}`);
+            
+            if (statusResponse.data.instance.connected) {
+              setConnectionStatus('connected');
+              setQrCode(null);
+              setInstance(statusResponse.data.instance);
+              cleanupIntervals();
             }
-          });
-          
-          if (statusResponse.data.connected) {
-            clearInterval(checkConnectionInterval);
-            setConnectionStatus('connected');
-            setQrCode(null);
-            // Refresh instance details
-            const detailsResponse = await axios.get(`${BASE_URL}/api/v1/instance/${id}`, {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            });
-            setInstance(detailsResponse.data);
+          } catch (err) {
+            console.error('Error checking connection status:', err);
           }
-        } catch (err) {
-          console.error('Error checking connection status:', err);
-        }
-      }, 5000);
-      
-      // For demo purposes, we'll clear the interval after 30 seconds
-      setTimeout(() => clearInterval(checkConnectionInterval), 30000);
-      
+        }, 5000);
+        
+        qrExpireTimeoutRef.current = setTimeout(() => {
+          if (connectionStatus !== 'connected') {
+            setConnectionStatus('expired');
+            cleanupIntervals();
+          }
+        }, 60000); // 1 minute
+      }
     } catch (err) {
+      console.error('Error connecting to WhatsApp:', err);
       setConnectionStatus('disconnected');
       setError('Failed to initiate WhatsApp connection');
-      console.error('Error connecting to WhatsApp:', err);
     }
   };
+
+  const handleDisconnectWhatsapp = async () => {
+    try {
+      setDisconnecting(true);
+      const apiClient = createApiClient();
+      
+      await apiClient.post(`/instance/disconnect/`, {
+        instance_key: id
+      });
+      
+      await fetchInstanceDetails();
+      setDisconnecting(false);
+    } catch (err) {
+      console.error('Error disconnecting WhatsApp:', err);
+      setError('Failed to disconnect WhatsApp');
+      setDisconnecting(false);
+    }
+  };
+
+  const handleReloadQrCode = useCallback(() => {
+    setQrCode(null);
+    setConnectionStatus('disconnected');
+    handleConnectWhatsapp();
+  }, []);
 
   if (loading) {
     return (
@@ -172,13 +221,13 @@ export default function InstanceDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white mb-2">
-              {instance.name || `Instance ${instance.id}`}
+              {/* {instance.name || `Instance ${instance.key}`} */}
+              Instance
             </h1>
-            <p className="text-gray-400">{instance.id}</p>
+            <p className="text-gray-400">{instance.key}</p>
           </div>
           <div className="mt-4 md:mt-0">
             <button
@@ -209,44 +258,58 @@ export default function InstanceDetailsPage() {
                   <div className={`w-3 h-3 rounded-full mr-2 ${
                     connectionStatus === 'connected' ? 'bg-green-500' : 
                     connectionStatus === 'connecting' ? 'bg-yellow-500' :
+                    connectionStatus === 'expired' ? 'bg-orange-500' :
                     'bg-red-500'
                   }`}></div>
                   <span className="text-white font-medium">
                     {connectionStatus === 'connected' ? 'Connected' : 
                      connectionStatus === 'connecting' ? 'Connecting...' :
+                     connectionStatus === 'expired' ? 'QR Code Expired' :
                      'Disconnected'}
                   </span>
                 </div>
 
-                {connectionStatus === 'connected' && (
-                  <div className="bg-gray-700/50 rounded-lg p-4">
-                    <h3 className="text-lg font-medium text-white mb-3">Device Information</h3>
-                    <div className="space-y-2 text-gray-300">
-                      <p>Phone: {instance.phoneNumber || 'Unknown'}</p>
-                      <p>Device: {instance.deviceDetails?.deviceManufacturer || 'Unknown'} {instance.deviceDetails?.deviceModel || ''}</p>
-                      <p>Platform: {instance.deviceDetails?.platform || 'Unknown'} {instance.deviceDetails?.osVersion || ''}</p>
-                      <p>Battery: {instance.deviceDetails?.batteryLevel ? `${instance.deviceDetails.batteryLevel}%` : 'Unknown'}</p>
-                    </div>
+                {connectionStatus === 'connected' ? (
+                  <div>
+                    <p className="text-gray-300 mb-6">
+                      Your WhatsApp is connected and ready to use. You can disconnect at any time.
+                    </p>
+                    <button
+                      onClick={handleDisconnectWhatsapp}
+                      disabled={disconnecting}
+                      className={`px-6 py-3 rounded-md font-medium text-white transition ${
+                        disconnecting ? 'bg-red-700 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      {disconnecting ? 'Disconnecting...' : 'Disconnect WhatsApp'}
+                    </button>
                   </div>
-                )}
-
-                {connectionStatus !== 'connected' && (
+                ) : (
                   <div>
                     <p className="text-gray-300 mb-6">
                       Connect your WhatsApp account to start using this instance. 
                       Scan the QR code with your phone to link your WhatsApp account.
                     </p>
-                    <button
-                      onClick={handleConnectWhatsapp}
-                      disabled={connectionStatus === 'connecting'}
-                      className={`px-6 py-3 rounded-md font-medium text-white transition ${
-                        connectionStatus === 'connecting'
-                          ? 'bg-yellow-700 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700'
-                      }`}
-                    >
-                      {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect WhatsApp'}
-                    </button>
+                    {connectionStatus === 'expired' ? (
+                      <button
+                        onClick={handleReloadQrCode}
+                        className="px-6 py-3 rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 transition"
+                      >
+                        Reload QR Code
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectWhatsapp}
+                        disabled={connectionStatus === 'connecting'}
+                        className={`px-6 py-3 rounded-md font-medium text-white transition ${
+                          connectionStatus === 'connecting'
+                            ? 'bg-yellow-700 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700'
+                        }`}
+                      >
+                        {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect WhatsApp'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -255,12 +318,25 @@ export default function InstanceDetailsPage() {
                 {connectionStatus === 'connecting' && qrCode ? (
                   <div className="text-center">
                     <div className="bg-white p-4 rounded-lg inline-block mb-3">
-                      {/* In a real app, you would render the QR code here */}
-                      <div className="w-64 h-64 bg-gray-800 flex items-center justify-center">
-                        <p className="text-gray-400 text-sm px-4">QR Code would display here</p>
-                      </div>
+                      <img 
+                        src={qrCode}
+                        alt="WhatsApp QR Code" 
+                        className="w-64 h-64 object-contain"
+                      />
                     </div>
                     <p className="text-gray-400 text-sm">Scan with WhatsApp to connect</p>
+                  </div>
+                ) : connectionStatus === 'expired' ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="bg-orange-900/20 border border-orange-800 rounded-lg p-6 text-center">
+                      <div className="w-16 h-16 bg-orange-800/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-orange-400 font-medium text-lg mb-1">QR Code Expired</h3>
+                      <p className="text-orange-300/70 text-sm">Please reload to get a new QR code</p>
+                    </div>
                   </div>
                 ) : connectionStatus === 'connected' ? (
                   <div className="flex items-center justify-center h-full">
@@ -280,7 +356,7 @@ export default function InstanceDetailsPage() {
                       <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
-                      <p className="text-gray-400">Click &quot Connect WhatsApp &quot to begin</p>
+                      <p className="text-gray-400">Click "Connect WhatsApp" to begin</p>
                     </div>
                   </div>
                 )}
@@ -301,32 +377,22 @@ export default function InstanceDetailsPage() {
                 <tbody>
                   <tr className="border-b border-gray-700">
                     <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Instance ID</th>
-                    <td className="px-6 py-4 text-white">{instance.id}</td>
+                    <td className="px-6 py-4 text-white">{instance._id}</td>
+                  </tr>
+                  <tr className="border-b border-gray-700">
+                    <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Instance Key</th>
+                    <td className="px-6 py-4 text-white">{instance.key}</td>
                   </tr>
                   <tr className="border-b border-gray-700">
                     <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Name</th>
                     <td className="px-6 py-4 text-white">{instance.name || '-'}</td>
                   </tr>
                   <tr className="border-b border-gray-700">
-                    <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Type</th>
-                    <td className="px-6 py-4">
-                      <span className="text-green-400 uppercase font-medium">{instance.type || 'DEVELOPER'}</span>
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Status</th>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${instance.authorized ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
-                        {instance.authorized ? 'Authorized' : 'Not Authorized'}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
                     <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Connection</th>
                     <td className="px-6 py-4">
-                      <span className={`flex items-center ${connectionStatus === 'connected' ? 'text-green-400' : 'text-red-400'}`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${connectionStatus === 'connected' ? 'bg-green-400' : 'bg-red-400'}`}></span>
-                        {connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
+                      <span className={`flex items-center ${instance.connected ? 'text-green-400' : 'text-red-400'}`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${instance.connected ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                        {instance.connected ? 'Connected' : 'Disconnected'}
                       </span>
                     </td>
                   </tr>
@@ -334,12 +400,6 @@ export default function InstanceDetailsPage() {
                     <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Created At</th>
                     <td className="px-6 py-4 text-white">
                       {instance.createdAt ? new Date(instance.createdAt).toLocaleString() : '-'}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-700">
-                    <th className="px-6 py-4 bg-gray-700/30 text-gray-300 font-medium">Last Updated</th>
-                    <td className="px-6 py-4 text-white">
-                      {instance.updatedAt ? new Date(instance.updatedAt).toLocaleString() : '-'}
                     </td>
                   </tr>
                 </tbody>

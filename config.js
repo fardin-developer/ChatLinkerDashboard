@@ -1,5 +1,5 @@
 const config = {
-    BASE_URL: "https://api.example.com",
+    BASE_URL: "https://api.chatlinker.cloud",
   };
   
   export default config;
