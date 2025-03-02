@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 
 interface Instance {
@@ -55,7 +56,7 @@ export default function InstanceDetailsPage() {
   const createApiClient = useCallback(() => {
     const token = getAuthToken();
     return axios.create({
-      baseURL: 'http://localhost:3000/api/v1',
+      baseURL: `${BASE_URL}/api/v1`,
       headers: {
         Authorization: `Bearer ${token}`
       }

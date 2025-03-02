@@ -12,6 +12,7 @@ interface Instance {
   authorized: boolean;
   type: string;
 }
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default function InstancesDashboard() {
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -35,7 +36,7 @@ export default function InstancesDashboard() {
         // setToken(token);
 
         
-        const response = await axios.get('http://localhost:3000/api/v1/instance/all', {
+        const response = await axios.get(`${BASE_URL}/api/v1/instance/all`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -92,7 +93,7 @@ export default function InstancesDashboard() {
     }
   
     try {
-      const response = await fetch('http://localhost:3000/api/v1/instance/create', {
+      const response = await fetch(`${BASE_URL}/api/v1/instance/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

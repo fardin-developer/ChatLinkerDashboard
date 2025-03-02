@@ -15,7 +15,7 @@ const swaggerDocument = {
     "description": "Description",
     "version": "1.0.0"
   },
-  "host": "localhost:3000",
+  "host": "https://api.chatlinker.cloud/v1",
   "basePath": "/",
   "schemes": [
     "http"
