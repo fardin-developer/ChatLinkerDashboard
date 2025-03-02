@@ -17,7 +17,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       startIcon,
       endIcon,
       className = "",
-      type = "button", // Default to 'button' type
+      type = "button",
       ...props
     },
     ref

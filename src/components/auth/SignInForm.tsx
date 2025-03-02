@@ -7,6 +7,7 @@ import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface FormData {
   email: string;
@@ -42,7 +43,7 @@ export default function SignInForm() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/v1/user/login", {
+      const response = await fetch(`${BASE_URL}/api/v1/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

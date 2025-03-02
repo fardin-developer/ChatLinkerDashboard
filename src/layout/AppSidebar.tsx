@@ -327,28 +327,30 @@ const AppSidebar: React.FC = () => {
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <Image
+              {/* <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
-              />
+              /> */}
+              <span className="text-white text-2xl">ChatLinker</span>
             </>
           ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            // <Image
+            //   src="/images/logo/logo.png"
+            //   alt="Logo"
+            //   width={32}
+            //   height={32}
+            // />
+            <span>ChatLinker</span>
           )}
         </Link>
       </div>

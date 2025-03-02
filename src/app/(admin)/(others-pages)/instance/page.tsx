@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from "next/navigation";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface Instance {
   id: string;
@@ -34,7 +35,7 @@ export default function InstancesDashboard() {
         // setToken(token);
 
         
-        const response = await axios.get('http://localhost:3000/api/v1/instance/all', {
+        const response = await axios.get(`${BASE_URL}/api/v1/instance/all1`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -91,7 +92,7 @@ export default function InstancesDashboard() {
     }
   
     try {
-      const response = await fetch('http://localhost:3000/api/v1/instance/create', {
+      const response = await fetch(`${BASE_URL}/api/v1/instance/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +180,7 @@ export default function InstancesDashboard() {
     <div className="p-6 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.length > 0 ? instances.map((instance) => (
-          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`http://localhost:3001/instance/${instance.id}`)}>
+          <div key={instance.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg" onClick={() => router.push(`${BASE_URL}/instance/${instance.id}`)}>
             <div className="p-5">
               <div className="flex items-center space-x-4">
                 <div className="bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center">

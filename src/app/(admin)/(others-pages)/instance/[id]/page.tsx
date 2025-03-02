@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 interface InstanceDetails {
   id: string;
   name?: string;
@@ -52,7 +52,7 @@ export default function InstanceDetailsPage() {
         console.log(id);
         
         
-        const response = await axios.get(`http://localhost:3000/api/v1/instance/${id}`, {
+        const response = await axios.get(`${BASE_URL}/api/v1/instance/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -77,7 +77,7 @@ export default function InstanceDetailsPage() {
       const token = localStorage.getItem('authToken');
       
       // This would be your actual API endpoint to get QR code
-      const response = await axios.post(`http://localhost:3000/api/v1/qr`, {}, {
+      const response = await axios.post(`${BASE_URL}/api/v1/qr`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -90,7 +90,7 @@ export default function InstanceDetailsPage() {
       // Here we'll simulate that with a timeout
       const checkConnectionInterval = setInterval(async () => {
         try {
-          const statusResponse = await axios.get(`http://localhost:3000/api/v1/instance/${id}/status`, {
+          const statusResponse = await axios.get(`${BASE_URL}/api/v1/instance/${id}/status`, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -101,7 +101,7 @@ export default function InstanceDetailsPage() {
             setConnectionStatus('connected');
             setQrCode(null);
             // Refresh instance details
-            const detailsResponse = await axios.get(`http://localhost:3000/api/v1/instance/${id}`, {
+            const detailsResponse = await axios.get(`${BASE_URL}/api/v1/instance/${id}`, {
               headers: {
                 Authorization: `Bearer ${token}`
               }
