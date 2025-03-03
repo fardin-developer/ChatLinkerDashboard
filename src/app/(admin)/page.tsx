@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { MessageMetrics } from "@/components/Report/MessageMetrics";
 import React from "react";
-import MonthlyTarget from "@/components/Report/MonthlyTarget";
-import MonthlySalesChart from "@/components/Report/MonthlySalesChart";
-import StatisticsChart from "@/components/Report/StatisticsChart";
-import RecentOrders from "@/components/Report/RecentOrders";
+// import MonthlyTarget from "@/components/Report/MonthlyTarget";
+// import MonthlySalesChart from "@/components/Report/MonthlySalesChart";
+// import StatisticsChart from "@/components/Report/StatisticsChart";
+// import RecentOrders from "@/components/Report/RecentOrders";
 // import DemographicCard from "@/components/Report/DemographicCard";
 
 export const metadata: Metadata = {

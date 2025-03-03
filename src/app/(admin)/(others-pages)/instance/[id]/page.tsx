@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+import Image from 'next/image';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 interface Instance {
   _id: string;
@@ -28,7 +29,6 @@ interface QRCodeResponse {
     qrCodeUrl: string;
   }
 }
-
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'expired';
 
@@ -99,7 +99,6 @@ export default function InstanceDetailsPage() {
 
   useEffect(() => {
     fetchInstanceDetails();
-    
     return () => {
       cleanupIntervals();
     };
@@ -108,10 +107,8 @@ export default function InstanceDetailsPage() {
   const handleConnectWhatsapp = async () => {
     try {
       cleanupIntervals();
-      
       setConnectionStatus('connecting');
       const apiClient = createApiClient();
-      
       const response = await apiClient.post<QRCodeResponse>('/qr/get_qr_code', {
         instance_key: id
       });
@@ -122,7 +119,6 @@ export default function InstanceDetailsPage() {
         connectionCheckIntervalRef.current = setInterval(async () => {
           try {
             const statusResponse = await apiClient.get(`/instance/${id}`);
-            
             if (statusResponse.data.instance.connected) {
               setConnectionStatus('connected');
               setQrCode(null);
@@ -152,11 +148,9 @@ export default function InstanceDetailsPage() {
     try {
       setDisconnecting(true);
       const apiClient = createApiClient();
-      
       await apiClient.post(`/instance/disconnect/`, {
         instance_key: id
       });
-      
       await fetchInstanceDetails();
       setDisconnecting(false);
     } catch (err) {
@@ -166,11 +160,12 @@ export default function InstanceDetailsPage() {
     }
   };
 
-  const handleReloadQrCode = useCallback(() => {
+  // Removed useCallback wrapper to avoid missing dependency warning.
+  const handleReloadQrCode = () => {
     setQrCode(null);
     setConnectionStatus('disconnected');
     handleConnectWhatsapp();
-  }, []);
+  };
 
   if (loading) {
     return (
@@ -223,10 +218,7 @@ export default function InstanceDetailsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              {/* {instance.name || `Instance ${instance.key}`} */}
-              Instance
-            </h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Instance</h1>
             <p className="text-gray-400">{instance.key}</p>
           </div>
           <div className="mt-4 md:mt-0">
@@ -256,16 +248,22 @@ export default function InstanceDetailsPage() {
               <div className="w-full md:w-1/2 mb-6 md:mb-0 md:pr-8">
                 <div className="flex items-center mb-4">
                   <div className={`w-3 h-3 rounded-full mr-2 ${
-                    connectionStatus === 'connected' ? 'bg-green-500' : 
-                    connectionStatus === 'connecting' ? 'bg-yellow-500' :
-                    connectionStatus === 'expired' ? 'bg-orange-500' :
-                    'bg-red-500'
+                    connectionStatus === 'connected'
+                      ? 'bg-green-500'
+                      : connectionStatus === 'connecting'
+                      ? 'bg-yellow-500'
+                      : connectionStatus === 'expired'
+                      ? 'bg-orange-500'
+                      : 'bg-red-500'
                   }`}></div>
                   <span className="text-white font-medium">
-                    {connectionStatus === 'connected' ? 'Connected' : 
-                     connectionStatus === 'connecting' ? 'Connecting...' :
-                     connectionStatus === 'expired' ? 'QR Code Expired' :
-                     'Disconnected'}
+                    {connectionStatus === 'connected'
+                      ? 'Connected'
+                      : connectionStatus === 'connecting'
+                      ? 'Connecting...'
+                      : connectionStatus === 'expired'
+                      ? 'QR Code Expired'
+                      : 'Disconnected'}
                   </span>
                 </div>
 
@@ -318,10 +316,12 @@ export default function InstanceDetailsPage() {
                 {connectionStatus === 'connecting' && qrCode ? (
                   <div className="text-center">
                     <div className="bg-white p-4 rounded-lg inline-block mb-3">
-                      <img 
+                      <Image 
                         src={qrCode}
                         alt="WhatsApp QR Code" 
-                        className="w-64 h-64 object-contain"
+                        width={256}
+                        height={256}
+                        className="object-contain"
                       />
                     </div>
                     <p className="text-gray-400 text-sm">Scan with WhatsApp to connect</p>
@@ -356,7 +356,7 @@ export default function InstanceDetailsPage() {
                       <svg className="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
-                      <p className="text-gray-400">Click "Connect WhatsApp" to begin</p>
+                      <p className="text-gray-400">Click &quot;Connect WhatsApp&quot; to begin</p>
                     </div>
                   </div>
                 )}
