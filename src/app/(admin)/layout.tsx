@@ -21,7 +21,7 @@ useEffect(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        router.push("/signin"); // Redirect using Next.js router
+        router.push("/signin"); 
       }
     }
   }, []);
