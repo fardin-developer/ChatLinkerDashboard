@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { MessageMetrics } from "@/components/Report/MessageMetrics";
 import MonthlyLimit from "@/components/Report/MonthlyTarget";
 import MonthlySalesChart from "@/components/Report/MonthlySalesChart";

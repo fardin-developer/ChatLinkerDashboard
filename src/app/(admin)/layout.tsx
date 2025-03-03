@@ -24,7 +24,7 @@ useEffect(() => {
         router.push("/signin"); 
       }
     }
-  }, []);
+  }, [router]);
   
   const fetchLoggedInUser = async () => {
     const apiClient = await createApiClient();

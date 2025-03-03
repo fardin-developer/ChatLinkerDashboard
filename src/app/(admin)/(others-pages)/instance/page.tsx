@@ -21,6 +21,19 @@ const truncateId = (id: string) =>
 const getLast4 = (str: string) =>
   str.length > 4 ? str.substring(str.length - 4) : str;
 
+interface InstanceResponse {
+  _id: string;
+  key: string;
+  user: string;
+  isRevoked: boolean;
+  connected: boolean;
+  createdAt: string;
+  __v: number;
+  sessionId?: string;
+  name?: string;
+}
+
+
 export default function InstancesDashboard() {
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,21 +53,20 @@ export default function InstancesDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Parse instances data
         const instancesData = Array.isArray(data)
           ? data
           : data?.instances && Array.isArray(data.instances)
           ? data.instances
           : Object.values(data);
 
-        const processedInstances: Instance[] = instancesData.map((instance: any) => ({
-          _id: instance._id,
-          name: instance.name || 'Instance',
-          key: instance.key || '',
-          connected: !!instance.connected,
-          authorized: !!instance.authorized,
-          type: instance.type || 'DEFAULT',
-        }));
+          const processedInstances: Instance[] = (instancesData as InstanceResponse[]).map((instance) => ({
+            _id: instance._id,
+            name: instance.name || 'Instance',
+            key: instance.key || '',
+            connected: instance.connected,
+            authorized: !instance.isRevoked, // Authorized if not revoked
+            type: 'DEFAULT', // Use default type as placeholder
+          }));
 
         setInstances(processedInstances);
       } catch {
