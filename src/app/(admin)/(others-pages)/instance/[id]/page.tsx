@@ -46,10 +46,15 @@ export default function InstanceDetailsPage() {
   const qrExpireTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const getAuthToken = useCallback(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('Authentication token not found');
+    if (typeof window === "undefined") {
+      return null;
     }
+  
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+    
     return token;
   }, []);
 

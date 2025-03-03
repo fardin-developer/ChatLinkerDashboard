@@ -1,29 +1,37 @@
 "use client";
 // import Image from "next/image";
 // import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 // import { DropdownItem } from "../ui/dropdown/DropdownItem";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userData, setUserData] = useState<{ name?: string; email?: string }>({});
 
-function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-  e.stopPropagation();
-  setIsOpen((prev) => !prev);
-}
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("userData");
+      if (storedUser) {
+        setUserData(JSON.parse(storedUser));
+      }
+    }
+  }, []);
+
+  function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e.stopPropagation();
+    setIsOpen((prev) => !prev);
+  }
 
   function closeDropdown() {
     setIsOpen(false);
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    window.location.href = '/signin';
-  }
-
-  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    window.location.href = "/signin";
+  };
   return (
     <div className="relative">
       <button

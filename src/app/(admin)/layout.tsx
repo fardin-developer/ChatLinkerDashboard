@@ -6,16 +6,25 @@ import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
 import createApiClient from "@/utis/axiosClient";
 import React, { useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 export default function AdminLayout({
+  
   children,
 }: {
   children: React.ReactNode;
 }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const router = useRouter();
 
-  const token = localStorage.getItem("authToken");
-  if (!token) window.location.href = "/signin";
+
+useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        router.push("/signin"); // Redirect using Next.js router
+      }
+    }
+  }, []);
   
   const fetchLoggedInUser = async () => {
     const apiClient = await createApiClient();
