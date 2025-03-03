@@ -11,11 +11,11 @@ export default function UserInfoCard({ user }: { user: User }) {
   const { isOpen, openModal, closeModal } = useModal();
   const [showApiKey, setShowApiKey] = useState(false);
   
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
-  };
+  // const handleSave = () => {
+  //   // Handle save logic here
+  //   console.log("Saving changes...");
+  //   closeModal();
+  // };
   
   const toggleApiKey = () => {
     setShowApiKey(!showApiKey);
