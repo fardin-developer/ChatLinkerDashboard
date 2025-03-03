@@ -25,6 +25,7 @@ interface MessageMetricsData {
     messagesSent: number;
   }>;
 }
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default function DashboardClient() {
   const [data, setData] = useState<MessageMetricsData>({
@@ -53,7 +54,7 @@ export default function DashboardClient() {
         }
 
         const response = await axios.get<MessageMetricsData>(
-          "/api/v1/report/messages",
+          `${BASE_URL}/api/v1/report/messages`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
